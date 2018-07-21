@@ -1,0 +1,2 @@
+<?php 
+define ('AUTHTOKEN', '1c448320665821ab6e9fe900c9519125');
