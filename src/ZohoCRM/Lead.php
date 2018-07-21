@@ -18,14 +18,19 @@ class Lead
 		$answer = Sender::get("https://crm.zoho.com/crm/private/json/Leads/getMyRecords");
 		
 		if(!isset($answer['response']['nodata'])) {
-			$answer = $answer['response']['result']['Leads'];
-			foreach($answer as $leadRow) {
-				$leadParams = [];
-				foreach($leadRow['FL'] as $leadField) {
-					$leadParams[$leadField['val']] = $leadField['content'];
+			$answer = $answer['response']['result']['Leads']['row'];
+			
+			$leadList = [];
+			
+			if(isset($answer['FL'])) {
+				$leadList[] = $this->parseLead($answer);
+			} else {
+				foreach($answer as $leadRow) {
+					$leadList[] = $this->parseLead($leadRow);
 				}
-				$currentLead = new Lead($leadParams);
+			}
 				
+			foreach($leadList as $currentLead) {
 				if($currentLead->Phone == $this->Phone) {
 					
 					// лид с таким номером уже есть, конвертируем
@@ -35,8 +40,7 @@ class Lead
 					]);
 					
 					return false;
-				}
-				
+				}				
 			}
 		}
 		
@@ -57,5 +61,13 @@ class Lead
 			$fl->addAttribute('val', str_replace('_', ' ', $pName));
 		}
 		return trim($xml->asXML());
+	}
+	
+	private function parseLead($leadRow) {
+		$leadParams = [];
+		foreach($leadRow['FL'] as $leadField) {
+			$leadParams[$leadField['val']] = $leadField['content'];
+		}
+		return new Lead($leadParams);
 	}
 }
